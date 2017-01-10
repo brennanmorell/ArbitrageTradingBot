@@ -31,7 +31,7 @@ public class Main
 
         Hitter hitter = new Hitter(exchangeView);
         PositionTracker tracker = new PositionTracker();
-        BookHandler b = new BookHandler(hitter, tracker, Symbol.of(BOOK_TACO));
+        BookHandler b = new BookHandler(hitter, tracker, Symbol.of(BOOK_TACO), Symbol.of(BOOK_BEEF), Symbol.of(BOOK_TORT));
         exchangeView.subscribe(Symbol.of(BOOK_TACO), b);
         exchangeView.subscribe(Symbol.of(BOOK_BEEF), b);
         exchangeView.subscribe(Symbol.of(BOOK_TORT), b);
