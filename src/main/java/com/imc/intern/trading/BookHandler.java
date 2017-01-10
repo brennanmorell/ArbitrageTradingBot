@@ -19,15 +19,23 @@ public class BookHandler implements OrderBookHandler{
 
     private static List<OwnTrade> ownTrades = new ArrayList<>();
 
-    private static Map<Double, Integer> askLevels = new TreeMap<>();
-    private static Map<Double, Integer> bidLevels = new TreeMap<>(Collections.reverseOrder());
+    private static Map<Double, Integer> askLevelsTaco = new TreeMap<>();
+    private static Map<Double, Integer> bidLevelsTaco = new TreeMap<>(Collections.reverseOrder());
+
+    private static Map<Double, Integer> askLevelsBeef = new TreeMap<>();
+    private static Map<Double, Integer> bidLevelsBeef = new TreeMap<>(Collections.reverseOrder());
+
+    private static Map<Double, Integer> askLevelTort = new TreeMap<>();
+    private static Map<Double, Integer> bidLevelTort = new TreeMap<>(Collections.reverseOrder());
 
     private static Hitter hitter;
     private static PositionTracker tracker;
+    private static Symbol symbol;
 
-    public BookHandler(Hitter h, PositionTracker t){
+    public BookHandler(Hitter h, PositionTracker t, Symbol s){
         hitter = h;
         tracker = t;
+        symbol = s;
     }
 
     //Called every 10 seconds and every time a level of the book changes
@@ -48,6 +56,12 @@ public class BookHandler implements OrderBookHandler{
     public void handleOwnTrade(OwnTrade trade) {
         LOGGER.info(trade.toString());
         accountTrade(trade);
+    }
+
+    //Called when an error occurs
+    @Override
+    public void handleError(Error e){
+        LOGGER.info(e.toString());
     }
 
     private static void accountTrade(OwnTrade trade){
@@ -118,7 +132,7 @@ public class BookHandler implements OrderBookHandler{
             LOGGER.info(pair.getValue() + "@" + pair.getKey());
         }
 
-        hitter.buyStrategy(askLevels);
-        hitter.sellStrategy(bidLevels);
+        hitter.buyStrategy(askLevels, symbol);
+        hitter.sellStrategy(bidLevels, symbol);
     }
 }
