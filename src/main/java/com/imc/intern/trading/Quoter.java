@@ -1,7 +1,7 @@
 package com.imc.intern.trading;
 
 /**
- * Created by imc on 10/01/2017.
+ * NAJ: I wouldn't create empty stub classes that are not being used
  */
 public class Quoter {
     public void quoteBid(){
