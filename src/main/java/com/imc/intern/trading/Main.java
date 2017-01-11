@@ -31,7 +31,9 @@ public class Main
 
         Hitter hitter = new Hitter(exchangeView);
         PositionTracker tracker = new PositionTracker();
+        // NAJ: I would use a more descriptive variable name here.  Notice how Symbol.of(BOOK_TACO) reads pretty clearly.
         BookHandler b = new BookHandler(hitter, tracker, Symbol.of(BOOK_TACO), Symbol.of(BOOK_BEEF), Symbol.of(BOOK_TORT));
+        // NAJ: Below, its not clear what "b" is, however, if named bookHandler, they would be very clear.
         exchangeView.subscribe(Symbol.of(BOOK_TACO), b);
         exchangeView.subscribe(Symbol.of(BOOK_BEEF), b);
         exchangeView.subscribe(Symbol.of(BOOK_TORT), b);

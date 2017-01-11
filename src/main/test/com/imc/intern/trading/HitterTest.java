@@ -11,6 +11,36 @@ import java.util.TreeMap;
 import java.util.Map;
 
 public class HitterTest {
+    // NAJ: I would use an @Before method to define the symbol, hitter, levels as fields:
+//    private final static Symbol SYMBOL = Symbol.of("test");
+//    private ExchangeView exchangeView;
+//    private Map<Double, Integer> levels;
+//    private Hitter hitter;
+//
+//    @Before
+//    public void before()
+//    {
+//        exchangeView = Mockito.mock(ExchangeView.class);
+//        hitter = new Hitter(exchangeView);
+//        levels = new TreeMap<>();
+//    }
+//
+//    @After
+//    public void after()
+//    {
+//        Mockito.verifyNoMoreInteractions(exchangeView);
+//    }
+//
+//    @Test
+//    public void buyStrategySendsOrders()
+//    {
+//        double price = 18.0;
+//        int volume = 100;
+//        levels.put(price, volume);
+//        hitter.buyStrategy(levels, symbol);
+//
+//        Mockito.verify(exchangeView).createOrder(SYMBOL, price, volume, OrderType.IMMEDIATE_OR_CANCEL, Side.BUY);
+//    }
 
     @Test
     public void buyStrategySendsOrders()

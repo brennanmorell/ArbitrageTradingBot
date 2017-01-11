@@ -14,9 +14,9 @@ import java.util.*;
  * Created by imc on 10/01/2017.
  */
 public class Hitter {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(Hitter.class);
 
+    // NAJ: would make these values not final and parameterized per book, and possibly a hitter per book.
     private static final double bookValue = 20;
     private static final double fixedOffset = .10;
     private static final double variableOffset = 0;
@@ -40,7 +40,7 @@ public class Hitter {
     }
 
     public void sellStrategy(Map<Double, Integer> bidLevels, Symbol book){
-        Iterator it = bidLevels.entrySet().iterator();
+        Iterator it = bidLevels.entrySet().iterator(); // NAJ: Unused code
         for (Map.Entry<Double, Integer> entry : bidLevels.entrySet()) {
             Double price = entry.getKey();
             Integer volume = entry.getValue();

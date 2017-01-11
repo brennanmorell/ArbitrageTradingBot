@@ -15,6 +15,8 @@ import java.util.*;
  */
 public class BookHandler implements OrderBookHandler{
 
+    // NAJ: I would refactor this to be a book handler per symbol instead of having a book handler that handles all 3 symbols.
+    // NAJ: If we added more symbols, this class would continue to scale pretty poorly.
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderBookHandler.class);
 
     private static List<OwnTrade> ownTrades = new ArrayList<>();
@@ -60,6 +62,7 @@ public class BookHandler implements OrderBookHandler{
     //Called every time you complete a trade
     @Override
     public void handleOwnTrade(OwnTrade trade) {
+        // NAJ: Much simpler method if you had a handler per book.
         LOGGER.info(trade.toString());
         if(trade.getBook() == symbol_taco){
             accountTrade(trade, askLevelsTaco, bidLevelsTaco);
@@ -79,9 +82,10 @@ public class BookHandler implements OrderBookHandler{
     }
 
     private static void accountTrade(OwnTrade trade, Map<Double, Integer> askLevels, Map<Double, Integer> bidLevels){
-        Double price = trade.getPrice();
+        Double price = trade.getPrice(); // NAJ: Double.valueOf()
         int tradeVolume = trade.getVolume();
 
+        // NAJ: CMD + ALT + L will automatically format code you have highlighted, you might enjoy this.
         if(trade.getSide() == Side.BUY){
             int currentVolume = askLevels.get(price);
             if(currentVolume - tradeVolume == 0){
@@ -133,6 +137,8 @@ public class BookHandler implements OrderBookHandler{
         updateSide(asks, askLevels);
 
         LOGGER.info("Current Bids:");
+        // NAJ: use the implied iterator here:
+        //      for (Map.Entry<Double, Integer> myDoubleIntegerEntry : bidLevelsTaco.entrySet()){}
         Iterator it_b = bidLevels.entrySet().iterator();
         while(it_b.hasNext()) {
             Map.Entry pair = (Map.Entry) it_b.next();
