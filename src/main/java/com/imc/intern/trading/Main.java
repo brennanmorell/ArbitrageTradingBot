@@ -30,7 +30,7 @@ public class Main
         final RemoteExchangeView exchangeView = client.getExchangeView();
 
         Hitter hitter = new Hitter(exchangeView);
-        PositionTracker tracker = new PositionTracker();
+        PositionTracker tracker = new PositionTracker(Symbol.of(BOOK_TACO), Symbol.of(BOOK_BEEF), Symbol.of(BOOK_TORT));
         BookHandler b = new BookHandler(hitter, tracker, Symbol.of(BOOK_TACO), Symbol.of(BOOK_BEEF), Symbol.of(BOOK_TORT));
         exchangeView.subscribe(Symbol.of(BOOK_TACO), b);
         exchangeView.subscribe(Symbol.of(BOOK_BEEF), b);
