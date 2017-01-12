@@ -119,136 +119,124 @@ public class HitterTest {
         tacoMaster
     }*/
 
-    @Test
+   /* @Test
     public void testTacoBuy(){
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-
         BookMaster tacoMaster = Mockito.mock(BookMaster.class);
         BookMaster beefMaster = Mockito.mock(BookMaster.class);
         BookMaster tortMaster = Mockito.mock(BookMaster.class);
 
+        ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
         //Set up tacoMaster map
         Map<Double, Integer> tacoAskLevels = new TreeMap<>();
-        tacoAskLevels.put(10d, 50);
+        tacoAskLevels.put(10d, 9);
         Mockito.when(tacoMaster.getAskLevels()).thenReturn(tacoAskLevels);
-
 
         //Set up beefMaster map
         Map<Double, Integer> beefBidLevels = new TreeMap<>();
-        beefBidLevels.put(7d, 75);
+        beefBidLevels.put(6d, 7);
         Mockito.when(beefMaster.getBidLevels()).thenReturn(beefBidLevels);
 
         //Set up tacoMaster map
         Map<Double, Integer> tortBidLevels = new TreeMap<>();
-        tortBidLevels.put(5d, 75);
+        tortBidLevels.put(5d, 10);
         Mockito.when(tortMaster.getBidLevels()).thenReturn(tortBidLevels);
 
-        Hitter hitter = new Hitter(exchangeView, tacoMaster, beefMaster, tortMaster);
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService);
         hitter.tacoBuyStrategy();
 
         //Verify create and account taco order
-        Mockito.verify(exchangeView).createOrder(tacoMaster.getSymbol(), 10d, 50, OrderType.IMMEDIATE_OR_CANCEL, Side.BUY);
-        Mockito.verify(tacoMaster).accountOrder(10d, 50, Side.BUY);
-
-        //Verify account beef and tort orders
-        Mockito.verify(beefMaster).accountOrder(7d, 50, Side.SELL);
-        Mockito.verify(tortMaster).accountOrder(5d, 50, Side.SELL);
+        Mockito.verify(executionService).executeBuyTaco(10d, 6d, 5d, 7);
     }
 
     @Test
     public void testNoTacoBuy(){
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-
         BookMaster tacoMaster = Mockito.mock(BookMaster.class);
         BookMaster beefMaster = Mockito.mock(BookMaster.class);
         BookMaster tortMaster = Mockito.mock(BookMaster.class);
 
-        //Set up tacoMaster map
-        Map<Double, Integer> tacoBidLevels = new TreeMap<>();
-        tacoBidLevels.put(10d, 50);
-        Mockito.when(tacoMaster.getAskLevels()).thenReturn(tacoBidLevels);
+        ExecutionService executionService = Mockito.mock(ExecutionService.class);
 
+        //Set up tacoMaster map
+        Map<Double, Integer> tacoAskLevels = new TreeMap<>();
+        tacoAskLevels.put(10d, 20);
+        Mockito.when(tacoMaster.getBidLevels()).thenReturn(tacoAskLevels);
 
         //Set up beefMaster map
         Map<Double, Integer> beefBidLevels = new TreeMap<>();
-        beefBidLevels.put(5d, 75);
-        Mockito.when(beefMaster.getBidLevels()).thenReturn(beefBidLevels);
+        beefBidLevels.put(4d, 10);
+        Mockito.when(beefMaster.getAskLevels()).thenReturn(beefBidLevels);
 
         //Set up tacoMaster map
         Map<Double, Integer> tortBidLevels = new TreeMap<>();
-        tortBidLevels.put(4d, 75);
-        Mockito.when(tortMaster.getBidLevels()).thenReturn(tortBidLevels);
+        tortBidLevels.put(5d, 10);
+        Mockito.when(tortMaster.getAskLevels()).thenReturn(tortBidLevels);
 
-        Hitter hitter = new Hitter(exchangeView, tacoMaster, beefMaster, tortMaster);
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService);
         hitter.tacoBuyStrategy();
 
-        //Verify no order occurs
-        Mockito.verifyZeroInteractions(exchangeView);
+        //Verify create and account taco order
+        Mockito.verifyZeroInteractions(executionService);
     }
 
     @Test
     public void testTacoSell(){
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-
         BookMaster tacoMaster = Mockito.mock(BookMaster.class);
         BookMaster beefMaster = Mockito.mock(BookMaster.class);
         BookMaster tortMaster = Mockito.mock(BookMaster.class);
 
+        ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
         //Set up tacoMaster map
         Map<Double, Integer> tacoBidLevels = new TreeMap<>();
-        tacoBidLevels.put(10d, 50);
+        tacoBidLevels.put(10d, 9);
         Mockito.when(tacoMaster.getBidLevels()).thenReturn(tacoBidLevels);
 
         //Set up beefMaster map
         Map<Double, Integer> beefAskLevels = new TreeMap<>();
-        beefAskLevels.put(5d, 75);
+        beefAskLevels.put(4d, 11);
         Mockito.when(beefMaster.getAskLevels()).thenReturn(beefAskLevels);
 
         //Set up tacoMaster map
         Map<Double, Integer> tortAskLevels = new TreeMap<>();
-        tortAskLevels.put(4d, 75);
+        tortAskLevels.put(5d, 11);
         Mockito.when(tortMaster.getAskLevels()).thenReturn(tortAskLevels);
 
-        Hitter hitter = new Hitter(exchangeView, tacoMaster, beefMaster, tortMaster);
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService);
         hitter.tacoSellStrategy();
 
         //Verify create and account taco order
-        Mockito.verify(exchangeView).createOrder(tacoMaster.getSymbol(), 10d, 50, OrderType.IMMEDIATE_OR_CANCEL, Side.SELL);
-        Mockito.verify(tacoMaster).accountOrder(10d, 50, Side.SELL);
-
-        //Verify account beef and tort orders
-        Mockito.verify(beefMaster).accountOrder(5d, 50, Side.BUY);
-        Mockito.verify(tortMaster).accountOrder(4d, 50, Side.BUY);
+        Mockito.verify(executionService).executeSellTaco(10d, 4d, 5d, 9);
     }
 
     @Test
     public void testNoTacoSell(){
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-
         BookMaster tacoMaster = Mockito.mock(BookMaster.class);
         BookMaster beefMaster = Mockito.mock(BookMaster.class);
         BookMaster tortMaster = Mockito.mock(BookMaster.class);
 
+        ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
         //Set up tacoMaster map
         Map<Double, Integer> tacoBidLevels = new TreeMap<>();
-        tacoBidLevels.put(10d, 50);
+        tacoBidLevels.put(10d, 10);
         Mockito.when(tacoMaster.getBidLevels()).thenReturn(tacoBidLevels);
 
         //Set up beefMaster map
         Map<Double, Integer> beefAskLevels = new TreeMap<>();
-        beefAskLevels.put(7d, 75);
+        beefAskLevels.put(6d, 10);
         Mockito.when(beefMaster.getAskLevels()).thenReturn(beefAskLevels);
 
         //Set up tacoMaster map
         Map<Double, Integer> tortAskLevels = new TreeMap<>();
-        tortAskLevels.put(5d, 75);
+        tortAskLevels.put(5d, 12);
         Mockito.when(tortMaster.getAskLevels()).thenReturn(tortAskLevels);
 
-        Hitter hitter = new Hitter(exchangeView, tacoMaster, beefMaster, tortMaster);
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService);
         hitter.tacoSellStrategy();
 
-        //Verify create and account taco order
-        Mockito.verifyZeroInteractions(exchangeView);
+        //Verify no order
+        Mockito.verifyZeroInteractions(executionService);
     }
-
+*/
 }

@@ -19,12 +19,8 @@ public class BookMaster {
 
     public BookMaster(Symbol s){
         symbol = s;
-        tracker = new PositionTracker();
     }
 
-    public PositionTracker getTracker(){
-        return tracker;
-    }
 
     public Symbol getSymbol(){
         return symbol;
@@ -43,18 +39,7 @@ public class BookMaster {
     public void processLevels(List<RetailState.Level> bids, List<RetailState.Level> asks) {
         updateSide(bids, bidLevels);
         updateSide(asks, askLevels);
-
-        /*LOGGER.info(symbol + " Current Bids:");
-        for (Map.Entry<Double, Integer> entry : bidLevels.entrySet()){
-            LOGGER.info(entry.getValue() + "@" + entry.getKey());
-        }
-
-        System.out.println();
-
-        LOGGER.info(symbol + " Current Asks:");
-        for (Map.Entry<Double, Integer> entry : askLevels.entrySet()){
-            LOGGER.info(entry.getValue() + "@" + entry.getKey());
-        }*/
+        logBook();
     }
 
     //Used to update map for provided side (buy or ask)
@@ -97,5 +82,20 @@ public class BookMaster {
             //}
         }
     }
+
+    public void logBook(){
+        LOGGER.info(symbol + " Current Bids:");
+        for (Map.Entry<Double, Integer> entry : bidLevels.entrySet()){
+            LOGGER.info(entry.getValue() + "@" + entry.getKey());
+        }
+
+        System.out.println();
+
+        LOGGER.info(symbol + " Current Asks:");
+        for (Map.Entry<Double, Integer> entry : askLevels.entrySet()){
+            LOGGER.info(entry.getValue() + "@" + entry.getKey());
+        }
+    }
+
 
 }

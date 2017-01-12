@@ -3,6 +3,7 @@ package com.imc.intern.trading;
 import com.imc.intern.exchange.client.ExchangeClient;
 import com.imc.intern.exchange.client.RemoteExchangeView;
 import com.imc.intern.exchange.datamodel.api.*;
+import javafx.geometry.Pos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +29,17 @@ public class Main
         ExchangeClient client = ExchangeClient.create(EXCHANGE_URL, Account.of(USERNAME), PASSWORD);
         final RemoteExchangeView exchangeView = client.getExchangeView();
 
+        PositionTracker tracker = new PositionTracker();
+
         BookMaster tacoBookMaster = new BookMaster(Symbol.of(BOOK_TACO));
         BookMaster beefBookMaster = new BookMaster(Symbol.of(BOOK_BEEF));
         BookMaster tortBookMaster = new BookMaster(Symbol.of(BOOK_TORT));
 
 
-        Hitter hitter = new Hitter(exchangeView, tacoBookMaster, beefBookMaster, tortBookMaster);
+        ExecutionService executionService = new ExecutionService(exchangeView);
+
+
+        Hitter hitter = new Hitter(tacoBookMaster, beefBookMaster, tortBookMaster, executionService, tracker);
 
         BookHandler tacoBookHandler = new BookHandler(tacoBookMaster, hitter);
         BookHandler beefBookHandler = new BookHandler(beefBookMaster, hitter);

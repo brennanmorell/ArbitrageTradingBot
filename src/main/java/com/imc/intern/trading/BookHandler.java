@@ -13,13 +13,11 @@ public class BookHandler implements OrderBookHandler {
     private static Hitter hitter;
 
     private BookMaster bookMaster;
-    private PositionTracker tracker;
     private Symbol symbol;
 
     public BookHandler(BookMaster b, Hitter h) {
         bookMaster = b;
         hitter = h;
-        tracker = bookMaster.getTracker();
         symbol = bookMaster.getSymbol();
     }
 
@@ -28,9 +26,7 @@ public class BookHandler implements OrderBookHandler {
     public void handleRetailState(RetailState retailState) {
         LOGGER.info("Retail State for " + symbol + ": " + retailState.toString());
         bookMaster.processLevels(retailState.getBids(), retailState.getAsks());
-
-        hitter.tacoBuyStrategy();
-        hitter.tacoSellStrategy();
+        hitter.checkArbitrage();
     }
 
     //Called every time you make an order, update an order, cancel an order, or your order gets traded
@@ -44,7 +40,7 @@ public class BookHandler implements OrderBookHandler {
     public void handleOwnTrade(OwnTrade trade) {
         LOGGER.info("Trade " + symbol + ": " + trade.toString());
         LOGGER.info(trade.toString());
-        tracker.updatePosition(trade.getVolume(), trade.getSide());
+        hitter.accountTrade(trade);
     }
 
     //Called when an error occurs

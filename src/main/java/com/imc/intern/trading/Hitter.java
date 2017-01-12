@@ -1,62 +1,130 @@
 package com.imc.intern.trading;
 
 import com.imc.intern.exchange.datamodel.Side;
-import com.imc.intern.exchange.datamodel.api.OrderType;
-import com.imc.intern.exchange.views.ExchangeView;
+import com.imc.intern.exchange.datamodel.api.OwnTrade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.*;
+
 
 
 public class Hitter {
     private static final Logger LOGGER = LoggerFactory.getLogger(Hitter.class);
-    private final ExchangeView exchangeView;
+
     // NAJ: would make these values not final and parameterized per book, and possibly a hitter per book.
     /*private static final double bookValue = 20;
     private static final double fixedOffset = .10;
     private static double variableOffset = 0;*/
 
-    /*
-        cproctor: Think about the single responsibility principle of SOLID here. I think that we can break this class
-        into two classes. It currently checks for opportunities AND sends hits. On that, you could have one
-        OpportunityChecker that grabs the info from your BookMasters and sees if you'd like to hit, and three Hitters
-        that just send orders.
-     */
+    private static int maxLongPosition  = 50;
+    private static int maxShortPosition = -50;
 
     private BookMaster tacoMaster;
     private BookMaster beefMaster;
     private BookMaster tortMaster;
 
-    public Hitter(ExchangeView e, BookMaster tacoM, BookMaster beefM, BookMaster tortM){
-        exchangeView = e;
+    private PositionTracker tracker;
+
+    private ExecutionService executionService;
+
+    public Hitter(BookMaster tacoM, BookMaster beefM, BookMaster tortM, ExecutionService e, PositionTracker t){
         tacoMaster = tacoM;
         beefMaster = beefM;
         tortMaster = tortM;
+        executionService = e;
+        tracker = t;
     }
 
-    /*
-        cproctor: We already discussed this in our one on one, noting here anyway :) You probably want to be smarter
-        about how you determine if an order is profitable.
-     */
+    public void checkArbitrage(){
+        if(validPositions()){
+            LOGGER.info("Valid positions. Proceeding to buy and sell strategies.");
+            tacoBuyStrategy();
+            tacoSellStrategy();
+        }
+    }
+
+    public Boolean validPositions(){
+        int beefPosition = tracker.getBeefPosition();
+        int tortPosition = tracker.getTortPosition();
+
+        if(beefPosition > maxLongPosition && tortPosition > maxLongPosition){
+            LOGGER.info("Positions are beyond max long. Adjusting positions.");
+            flattenLong(beefPosition, tortPosition);
+            return false;
+        }
+        else if(beefPosition < maxShortPosition && tortPosition < maxShortPosition){
+            LOGGER.info("Position are beyond max short. Adjusting positions.");
+            flattenShort(beefPosition, tortPosition);
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+
+    public void flattenLong(int beefPosition, int tortPosition){
+        LOGGER.info("Attempting to flatten long beef position.");
+        Iterator bidLevelsBeef = beefMaster.getBidLevels().entrySet().iterator();
+        while(beefPosition - maxLongPosition > 0 && bidLevelsBeef.hasNext()){
+            Map.Entry<Double, Integer> beefBid = (Map.Entry<Double, Integer>)bidLevelsBeef.next();
+            int volume = Math.min(beefBid.getValue(), beefPosition-maxLongPosition); //makes sure not to over sell and end up short
+            executionService.executeBeef(beefBid.getKey(), volume, Side.SELL);
+            beefPosition-=volume;
+        }
+
+        LOGGER.info("Attempting to flatten long tort position.");
+        Iterator bidLevelsTort = tortMaster.getBidLevels().entrySet().iterator();
+        while(tortPosition - maxLongPosition > 0 && bidLevelsTort.hasNext()){
+            Map.Entry<Double, Integer> tortBid = (Map.Entry<Double, Integer>)bidLevelsTort.next();
+            int volume = Math.min(tortBid.getValue(), tortPosition-maxLongPosition); //makes sure not to over sell and end up short
+            executionService.executeTort(tortBid.getKey(), volume, Side.SELL);
+            tortPosition-=volume;
+        }
+    }
+
+    public void flattenShort(int beefPosition, int tortPosition){
+        LOGGER.info("Attempting to flatten short beef position.");
+        Iterator askLevelsBeef = beefMaster.getAskLevels().entrySet().iterator();
+        while(maxLongPosition - beefPosition > 0 && askLevelsBeef.hasNext()){
+            Map.Entry<Double, Integer> beefAsk = (Map.Entry<Double, Integer>)askLevelsBeef.next();
+            int volume = Math.min(beefAsk.getValue(), maxShortPosition-beefPosition); //makes sure not to over sell and end up long
+            executionService.executeBeef(beefAsk.getKey(), volume, Side.BUY);
+            beefPosition+=volume;
+        }
+
+        LOGGER.info("Attempting to flatten short tort position.");
+        Iterator askLevelsTort = tortMaster.getAskLevels().entrySet().iterator();
+        while(maxLongPosition - tortPosition > 0 && askLevelsTort.hasNext()){
+            Map.Entry<Double, Integer> tortAsk = (Map.Entry<Double, Integer>)askLevelsTort.next();
+            int volume = Math.min(tortAsk.getValue(), maxShortPosition-tortPosition); //makes sure not to over sell and end up long
+            executionService.executeTort(tortAsk.getKey(), volume, Side.BUY);
+            tortPosition+=volume;
+        }
+    }
+
     public void tacoBuyStrategy(){
         Iterator askLevelsTaco = tacoMaster.getAskLevels().entrySet().iterator();
         Iterator bidLevelsBeef = beefMaster.getBidLevels().entrySet().iterator();
         Iterator bidLevelsTort = tortMaster.getBidLevels().entrySet().iterator();
 
-        //i know this is dumb to break after 1. gonna fix this. had a concurrent modification exception.
-        while (askLevelsTaco.hasNext() && bidLevelsBeef.hasNext() && bidLevelsTort.hasNext()) {
+        int levelCount = 0;
+
+        while (askLevelsTaco.hasNext() && bidLevelsBeef.hasNext() && bidLevelsTort.hasNext() && levelCount < 5) {
             Map.Entry<Double, Integer> tacoAsk = (Map.Entry<Double, Integer>) askLevelsTaco.next();
             Map.Entry<Double, Integer> beefBid = (Map.Entry<Double, Integer>) bidLevelsBeef.next();
             Map.Entry<Double, Integer> tortBid = (Map.Entry<Double, Integer>) bidLevelsTort.next();
 
             int volume = minOfThree(tacoAsk.getValue(), beefBid.getValue(), tortBid.getValue());
-
+            volume = Math.min(volume, 10); //imposed volume limit
             if (tacoAsk.getKey() < (beefBid.getKey() + tortBid.getKey())) {
-                executeBuyTaco(tacoAsk.getKey(), beefBid.getKey(), tortBid.getKey(), volume);
-                break;
+                executionService.executeBuyTaco(tacoAsk.getKey(), beefBid.getKey(), tortBid.getKey(), volume);
+                //accountTacoBuy(tacoAsk.getKey(), beefBid.getKey(), tortBid.getKey(), volume);
+                //break;
             } else {
                 break;
             }
+            levelCount++;
         }
     }
 
@@ -65,47 +133,48 @@ public class Hitter {
         Iterator askLevelsBeef = beefMaster.getAskLevels().entrySet().iterator();
         Iterator askLevelsTort = tortMaster.getAskLevels().entrySet().iterator();
 
-        //i know this is dumb to break after 1. gonna fix this. had a concurrent modification exception.
-        while(bidLevelsTaco.hasNext() && askLevelsBeef.hasNext() && askLevelsTort.hasNext()){
+        int levelCount = 0; //max depth to search too
+
+        while(bidLevelsTaco.hasNext() && askLevelsBeef.hasNext() && askLevelsTort.hasNext() && levelCount < 5){
             Map.Entry<Double,Integer> tacoBid = (Map.Entry<Double,Integer>)bidLevelsTaco.next();
             Map.Entry<Double,Integer> beefAsk = (Map.Entry<Double,Integer>)askLevelsBeef.next();
             Map.Entry<Double,Integer> tortAsk = (Map.Entry<Double,Integer>)askLevelsTort.next();
 
             int volume = minOfThree(tacoBid.getValue(), beefAsk.getValue(), tortAsk.getValue());
-
+            volume = Math.min(volume, 10);
             if(tacoBid.getKey() > (beefAsk.getKey() + tortAsk.getKey())){
-                executeSellTaco(tacoBid.getKey(), beefAsk.getKey(), tortAsk.getKey(), volume);
-                break;
+                executionService.executeSellTaco(tacoBid.getKey(), beefAsk.getKey(), tortAsk.getKey(), volume);
+                //accountTacoSell(tacoBid.getKey(), beefAsk.getKey(), tortAsk.getKey(), volume);
+                //break;
             }
             else{
                 break;
             }
+            levelCount++;
         }
     }
 
-    public void executeBuyTaco(Double tacoAskPrice, Double beefBidPrice, Double tortBidPrice, int volume){
-        LOGGER.info("BUYING TACO");
-        exchangeView.createOrder(tacoMaster.getSymbol(), tacoAskPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, Side.BUY);
-        tacoMaster.accountOrder(tacoAskPrice, volume, Side.BUY);
+    public void accountTrade(OwnTrade trade){
+        if(trade.getBook().equals(tacoMaster.getSymbol())){
+            tacoMaster.accountOrder(trade.getPrice(), trade.getVolume(), trade.getSide());
+        }
+        else if(trade.getBook().equals(beefMaster.getSymbol())){
+            beefMaster.accountOrder(trade.getPrice(), trade.getVolume(), trade.getSide());
+        }
+        else{
+            tortMaster.accountOrder(trade.getPrice(), trade.getVolume(), trade.getSide());
+        }
 
-        hedgeTacoExecution(beefBidPrice, tortBidPrice, volume, Side.SELL);
+        updatePositions(trade);
     }
 
-    public void executeSellTaco(Double tacoBidPrice, Double beefAskPrice, Double tortAskPrice, int volume){
-        LOGGER.info("SELLING TACO");
-        exchangeView.createOrder(tacoMaster.getSymbol(), tacoBidPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, Side.SELL);
-        tacoMaster.accountOrder(tacoBidPrice, volume, Side.SELL);
-
-        hedgeTacoExecution(beefAskPrice, tortAskPrice, volume, Side.BUY);
+    public void updatePositions(OwnTrade trade){
+        if(trade.getBook().equals(tacoMaster.getSymbol())){
+            tracker.updateBeefPosition(trade.getVolume(), trade.getSide());
+            tracker.updateTortPosition(trade.getVolume(), trade.getSide());
+        }
     }
 
-    public void hedgeTacoExecution(Double beefPrice, Double tortPrice, int volume, Side side){
-        LOGGER.info("HEDGING EXECUTION");
-        //this is where i would execute the order come exercise 3
-
-        beefMaster.accountOrder(beefPrice, volume, side);
-        tortMaster.accountOrder(tortPrice, volume, side);
-    }
 
     public int minOfThree(int a, int b, int c){
         return Math.min(a,Math.min(b,c));
