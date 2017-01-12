@@ -16,6 +16,13 @@ public class Hitter {
     private static final double fixedOffset = .10;
     private static double variableOffset = 0;*/
 
+    /*
+        cproctor: Think about the single responsibility principle of SOLID here. I think that we can break this class
+        into two classes. It currently checks for opportunities AND sends hits. On that, you could have one
+        OpportunityChecker that grabs the info from your BookMasters and sees if you'd like to hit, and three Hitters
+        that just send orders.
+     */
+
     private BookMaster tacoMaster;
     private BookMaster beefMaster;
     private BookMaster tortMaster;
@@ -27,6 +34,10 @@ public class Hitter {
         tortMaster = tortM;
     }
 
+    /*
+        cproctor: We already discussed this in our one on one, noting here anyway :) You probably want to be smarter
+        about how you determine if an order is profitable.
+     */
     public void tacoBuyStrategy(){
         Iterator askLevelsTaco = tacoMaster.getAskLevels().entrySet().iterator();
         Iterator bidLevelsBeef = beefMaster.getBidLevels().entrySet().iterator();
