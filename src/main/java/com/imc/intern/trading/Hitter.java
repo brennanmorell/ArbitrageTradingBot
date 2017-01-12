@@ -2,6 +2,7 @@ package com.imc.intern.trading;
 
 import com.imc.intern.exchange.datamodel.Side;
 import com.imc.intern.exchange.datamodel.api.OwnTrade;
+import com.imc.intern.exchange.datamodel.api.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +18,7 @@ public class Hitter {
     private static final double fixedOffset = .10;
     private static double variableOffset = 0;*/
 
-    private static int maxLongPosition  = 50;
-    private static int maxShortPosition = -50;
+    private static int maxTradeVolume = 100;
 
     private BookMaster tacoMaster;
     private BookMaster beefMaster;
@@ -48,14 +48,30 @@ public class Hitter {
         int beefPosition = tracker.getBeefPosition();
         int tortPosition = tracker.getTortPosition();
 
-        if(beefPosition > maxLongPosition && tortPosition > maxLongPosition){
-            LOGGER.info("Positions are beyond max long. Adjusting positions.");
-            flattenLong(beefPosition, tortPosition);
+        LOGGER.info("BEEF POSITION IS " + beefPosition);
+        LOGGER.info("TORT POSITION IS " + tortPosition);
+
+        int maxLongPosition = tracker.getMaxLongPosition();
+        int maxShortPosition = tracker.getMaxShortPosition();
+
+        if(beefPosition > maxLongPosition){
+            LOGGER.info("Beef position beyond max long. Adjusting position.");
+            flattenLong(beefPosition, maxLongPosition, beefMaster);
             return false;
         }
-        else if(beefPosition < maxShortPosition && tortPosition < maxShortPosition){
-            LOGGER.info("Position are beyond max short. Adjusting positions.");
-            flattenShort(beefPosition, tortPosition);
+        else if(beefPosition < maxShortPosition){
+            LOGGER.info("Beef position beyond max short. Adjusting position.");
+            flattenShort(beefPosition, maxShortPosition, beefMaster);
+            return false;
+        }
+        else if(tortPosition > maxLongPosition){
+            LOGGER.info("Tort position beyond max long. Adjusting position.");
+            flattenLong(tortPosition, maxLongPosition, tortMaster);
+            return false;
+        }
+        else if(tortPosition < maxShortPosition){
+            LOGGER.info("Tort position beyond max short. Adjusting position.");
+            flattenShort(tortPosition, maxShortPosition, tortMaster);
             return false;
         }
         else{
@@ -63,43 +79,27 @@ public class Hitter {
         }
     }
 
-    public void flattenLong(int beefPosition, int tortPosition){
+    public void flattenLong(int position, int maxLongPosition, BookMaster master){
         LOGGER.info("Attempting to flatten long beef position.");
-        Iterator bidLevelsBeef = beefMaster.getBidLevels().entrySet().iterator();
-        while(beefPosition - maxLongPosition > 0 && bidLevelsBeef.hasNext()){
-            Map.Entry<Double, Integer> beefBid = (Map.Entry<Double, Integer>)bidLevelsBeef.next();
-            int volume = Math.min(beefBid.getValue(), beefPosition-maxLongPosition); //makes sure not to over sell and end up short
-            executionService.executeBeef(beefBid.getKey(), volume, Side.SELL);
-            beefPosition-=volume;
-        }
-
-        LOGGER.info("Attempting to flatten long tort position.");
-        Iterator bidLevelsTort = tortMaster.getBidLevels().entrySet().iterator();
-        while(tortPosition - maxLongPosition > 0 && bidLevelsTort.hasNext()){
-            Map.Entry<Double, Integer> tortBid = (Map.Entry<Double, Integer>)bidLevelsTort.next();
-            int volume = Math.min(tortBid.getValue(), tortPosition-maxLongPosition); //makes sure not to over sell and end up short
-            executionService.executeTort(tortBid.getKey(), volume, Side.SELL);
-            tortPosition-=volume;
+        Iterator bidLevels = master.getBidLevels().entrySet().iterator();
+        while(position - maxLongPosition > 0 && bidLevels.hasNext()){
+            Map.Entry<Double, Integer> bid = (Map.Entry<Double, Integer>)bidLevels.next();
+            int volume = Math.min(bid.getValue(), Math.abs(position)); //makes sure not to over sell and end up short
+            volume = Math.min(volume, maxTradeVolume);
+            executionService.executeFlatten(master.getSymbol(), bid.getKey(), volume, Side.SELL);
+            position-=volume;
         }
     }
 
-    public void flattenShort(int beefPosition, int tortPosition){
+    public void flattenShort(int position, int maxShortPosition, BookMaster master){
         LOGGER.info("Attempting to flatten short beef position.");
-        Iterator askLevelsBeef = beefMaster.getAskLevels().entrySet().iterator();
-        while(maxLongPosition - beefPosition > 0 && askLevelsBeef.hasNext()){
-            Map.Entry<Double, Integer> beefAsk = (Map.Entry<Double, Integer>)askLevelsBeef.next();
-            int volume = Math.min(beefAsk.getValue(), maxShortPosition-beefPosition); //makes sure not to over sell and end up long
-            executionService.executeBeef(beefAsk.getKey(), volume, Side.BUY);
-            beefPosition+=volume;
-        }
-
-        LOGGER.info("Attempting to flatten short tort position.");
-        Iterator askLevelsTort = tortMaster.getAskLevels().entrySet().iterator();
-        while(maxLongPosition - tortPosition > 0 && askLevelsTort.hasNext()){
-            Map.Entry<Double, Integer> tortAsk = (Map.Entry<Double, Integer>)askLevelsTort.next();
-            int volume = Math.min(tortAsk.getValue(), maxShortPosition-tortPosition); //makes sure not to over sell and end up long
-            executionService.executeTort(tortAsk.getKey(), volume, Side.BUY);
-            tortPosition+=volume;
+        Iterator askLevels = master.getAskLevels().entrySet().iterator();
+        while(maxShortPosition - position > 0 && askLevels.hasNext()){
+            Map.Entry<Double, Integer> ask = (Map.Entry<Double, Integer>)askLevels.next();
+            int volume = Math.min(ask.getValue(), Math.abs(position)); //makes sure not to over sell and end up long
+            volume = Math.min(volume, maxTradeVolume);
+            executionService.executeFlatten(master.getSymbol(), ask.getKey(), volume, Side.BUY);
+            position+=volume;
         }
     }
 
@@ -116,11 +116,9 @@ public class Hitter {
             Map.Entry<Double, Integer> tortBid = (Map.Entry<Double, Integer>) bidLevelsTort.next();
 
             int volume = minOfThree(tacoAsk.getValue(), beefBid.getValue(), tortBid.getValue());
-            volume = Math.min(volume, 10); //imposed volume limit
+            volume = Math.min(volume, maxTradeVolume); //imposed volume limit
             if (tacoAsk.getKey() < (beefBid.getKey() + tortBid.getKey())) {
                 executionService.executeBuyTaco(tacoAsk.getKey(), beefBid.getKey(), tortBid.getKey(), volume);
-                //accountTacoBuy(tacoAsk.getKey(), beefBid.getKey(), tortBid.getKey(), volume);
-                //break;
             } else {
                 break;
             }
@@ -141,11 +139,9 @@ public class Hitter {
             Map.Entry<Double,Integer> tortAsk = (Map.Entry<Double,Integer>)askLevelsTort.next();
 
             int volume = minOfThree(tacoBid.getValue(), beefAsk.getValue(), tortAsk.getValue());
-            volume = Math.min(volume, 10);
+            volume = Math.min(volume, maxTradeVolume);
             if(tacoBid.getKey() > (beefAsk.getKey() + tortAsk.getKey())){
                 executionService.executeSellTaco(tacoBid.getKey(), beefAsk.getKey(), tortAsk.getKey(), volume);
-                //accountTacoSell(tacoBid.getKey(), beefAsk.getKey(), tortAsk.getKey(), volume);
-                //break;
             }
             else{
                 break;
@@ -171,6 +167,12 @@ public class Hitter {
     public void updatePositions(OwnTrade trade){
         if(trade.getBook().equals(tacoMaster.getSymbol())){
             tracker.updateBeefPosition(trade.getVolume(), trade.getSide());
+            tracker.updateTortPosition(trade.getVolume(), trade.getSide());
+        }
+        else if(trade.getBook().equals(beefMaster.getSymbol())){
+            tracker.updateBeefPosition(trade.getVolume(), trade.getSide());
+        }
+        else if(trade.getBook().equals(tortMaster.getSymbol())){
             tracker.updateTortPosition(trade.getVolume(), trade.getSide());
         }
     }

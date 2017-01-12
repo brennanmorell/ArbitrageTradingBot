@@ -8,9 +8,19 @@ import org.slf4j.LoggerFactory;
 public class PositionTracker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PositionTracker.class);
+    private static int maxLongPosition  = 50;
+    private static int maxShortPosition = -50;
 
     private int beefPosition = 0;
     private int tortPosition = 0;
+
+    public int getMaxLongPosition(){
+        return maxLongPosition;
+    }
+
+    public int getMaxShortPosition(){
+        return maxShortPosition;
+    }
 
     public int getBeefPosition(){
         return beefPosition;

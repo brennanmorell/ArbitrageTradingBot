@@ -15,7 +15,6 @@ public class BookMaster {
     private Symbol symbol;
     private Map<Double, Integer> askLevels = new TreeMap<>();
     private Map<Double, Integer> bidLevels = new TreeMap<>(Collections.reverseOrder());
-    private PositionTracker tracker;
 
     public BookMaster(Symbol s){
         symbol = s;
@@ -39,7 +38,7 @@ public class BookMaster {
     public void processLevels(List<RetailState.Level> bids, List<RetailState.Level> asks) {
         updateSide(bids, bidLevels);
         updateSide(asks, askLevels);
-        logBook();
+        //logBook();
     }
 
     //Used to update map for provided side (buy or ask)
@@ -63,23 +62,19 @@ public class BookMaster {
 
     public void accountOrder(Double price, int tradeVolume, Side side) {
         if (side == Side.BUY) {
-            //if(askLevels.get(price) != null) { //race condition because accountOrder may be called on order but corresponding retailState for order
-                int currentVolume = askLevels.get(price); //could trigger processLevels and remove price from treemap before accountOrder can get there
-                if (currentVolume - tradeVolume == 0) {
-                    askLevels.remove(price);
-                } else {
-                    askLevels.replace(price, currentVolume, currentVolume - tradeVolume);
-                }
-            //}
+            int currentVolume = askLevels.get(price);
+            if (currentVolume - tradeVolume == 0) {
+                askLevels.remove(price);
+            } else {
+                askLevels.replace(price, currentVolume, currentVolume - tradeVolume);
+            }
         } else {
-            //if(bidLevels.get(price) != null) { //race condition because accountOrder may be called on order but corresponding retailState for order
-                int currentVolume = bidLevels.get(price); //could trigger processLevels and remove price from treemap before accountOrder can get there
-                if (currentVolume - tradeVolume == 0) {
-                    bidLevels.remove(price);
-                } else {
-                    bidLevels.replace(price, currentVolume, currentVolume - tradeVolume);
-                }
-            //}
+            int currentVolume = bidLevels.get(price);
+            if (currentVolume - tradeVolume == 0) {
+                bidLevels.remove(price);
+            } else {
+                bidLevels.replace(price, currentVolume, currentVolume - tradeVolume);
+            }
         }
     }
 

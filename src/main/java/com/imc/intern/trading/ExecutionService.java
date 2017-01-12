@@ -22,6 +22,7 @@ public class ExecutionService {
     private static final String BOOK_BEEF = "BEEF";
     private static final String BOOK_TORT = "TORT";
 
+    private static long rateLimit = 30;
     private static long lastBuyTime = 0;
 
     public ExecutionService(ExchangeView e){
@@ -50,30 +51,23 @@ public class ExecutionService {
     }
 
     /*Execution used for flattening beef and tort positions*/
-    public void executeBeef(Double beefBidPrice, int volume, Side side){
+    public void executeFlatten(Symbol symbol, Double beefBidPrice, int volume, Side side){
+        LOGGER.info("TRYING TO " + side.toString().toUpperCase() + " " + volume + " FOR " + symbol);
         long buyTime = System.currentTimeMillis();
         if(validTime(buyTime)) {
-            exchangeView.createOrder(Symbol.of(BOOK_BEEF), beefBidPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, side);
-            lastBuyTime = buyTime;
-        }
-    }
-
-    public void executeTort(Double tortBidPrice, int volume, Side side){
-        long buyTime = System.currentTimeMillis();
-        if(validTime(buyTime)) {
-            exchangeView.createOrder(Symbol.of(BOOK_TORT), tortBidPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, side);
+            exchangeView.createOrder(symbol, beefBidPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, side);
             lastBuyTime = buyTime;
         }
     }
 
     public void hedgeTacoExecution(Double beefPrice, Double tortPrice, int volume, Side side){
-        LOGGER.info("HEDGING TRADE");
+        LOGGER.info("HEDGING TRADE: " + side.toString().toUpperCase() + " BEEF AND " + side.toString().toUpperCase() + " TORT");
         //this is where i would execute the order come exercise 3
         exchangeView.createOrder(Symbol.of(BOOK_BEEF), beefPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, side);
         exchangeView.createOrder(Symbol.of(BOOK_TORT), tortPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, side);
     }
 
     public Boolean validTime(long buyTime){
-        return buyTime - lastBuyTime >= TimeUnit.SECONDS.toMillis(1);
+        return buyTime - lastBuyTime >= TimeUnit.SECONDS.toMillis(rateLimit);
     }
 }

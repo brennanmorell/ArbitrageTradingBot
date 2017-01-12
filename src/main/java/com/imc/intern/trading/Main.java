@@ -15,9 +15,6 @@ public class Main
     private static final String EXCHANGE_URL = "tcp://54.227.125.23:61616";
     private static final String USERNAME = "bmorell";
     private static final String PASSWORD = "friend planet experiment taught";
-    /*private static final String BOOK_TACO = "BMO.TACO";
-    private static final String BOOK_BEEF = "BMO.BEEF";
-    private static final String BOOK_TORT = "BMO.TORT";*/
     private static final String BOOK_TACO = "TACO";
     private static final String BOOK_BEEF = "BEEF";
     private static final String BOOK_TORT = "TORT";
@@ -25,7 +22,7 @@ public class Main
 
     public static void main(String[] args) throws Exception
     {
-        LOGGER.info("Let's make money");
+        LOGGER.info("Let's make money.");
         ExchangeClient client = ExchangeClient.create(EXCHANGE_URL, Account.of(USERNAME), PASSWORD);
         final RemoteExchangeView exchangeView = client.getExchangeView();
 
