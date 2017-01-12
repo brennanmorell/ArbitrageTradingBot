@@ -44,7 +44,7 @@ public class Hitter {
         }
     }
 
-    public Boolean validPositions(){
+    public void validPositions(){
         int beefPosition = tracker.getBeefPosition();
         int tortPosition = tracker.getTortPosition();
 
@@ -54,28 +54,23 @@ public class Hitter {
         int maxLongPosition = tracker.getMaxLongPosition();
         int maxShortPosition = tracker.getMaxShortPosition();
 
-        if(beefPosition > maxLongPosition){
-            LOGGER.info("Beef position beyond max long. Adjusting position.");
-            flattenLong(beefPosition, maxLongPosition, beefMaster);
-            return false;
+        checkLong(beefPosition, maxLongPosition, beefMaster);
+        checkLong(tortPosition, maxLongPosition, tortMaster);
+        checkShort(beefPosition, maxShortPosition, beefMaster);
+        checkShort(tortPosition, maxShortPosition, tortMaster);
+    }
+
+    public void checkLong(int position, int maxLongPosition, BookMaster master){
+        if(position > maxLongPosition){
+            LOGGER.info(master.getSymbol() + " position beyond max long. Adjusting position.");
+            flattenLong(position, maxLongPosition, master);
         }
-        else if(beefPosition < maxShortPosition){
-            LOGGER.info("Beef position beyond max short. Adjusting position.");
-            flattenShort(beefPosition, maxShortPosition, beefMaster);
-            return false;
-        }
-        else if(tortPosition > maxLongPosition){
-            LOGGER.info("Tort position beyond max long. Adjusting position.");
-            flattenLong(tortPosition, maxLongPosition, tortMaster);
-            return false;
-        }
-        else if(tortPosition < maxShortPosition){
-            LOGGER.info("Tort position beyond max short. Adjusting position.");
-            flattenShort(tortPosition, maxShortPosition, tortMaster);
-            return false;
-        }
-        else{
-            return true;
+    }
+
+    public void checkShort(int position, int maxShortPosition, BookMaster master){
+        if(position < maxShortPosition){
+            LOGGER.info(master.getSymbol() + " position beyond max short. Adjusting position.");
+            flattenShort(position, maxShortPosition, master);
         }
     }
 
