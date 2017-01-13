@@ -22,7 +22,7 @@ public class ExecutionService {
     private static final String BOOK_BEEF = "BEEF";
     private static final String BOOK_TORT = "TORT";
 
-    private static long rateLimit = 30;
+    private static long rateLimit = 30; // msanders: this limit doesn't change, so why not make it "final"
     private static long lastBuyTime = 0;
 
     public ExecutionService(ExchangeView e){

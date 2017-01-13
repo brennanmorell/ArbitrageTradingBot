@@ -99,12 +99,17 @@ public class Hitter {
     }
 
     public void tacoBuyStrategy(){
+
+        // msanders: the reason you have to do a cast below in your while loop is that you're not providing type info
+        //           for your iterator here. Fix it any you won't need to cast. These three should look like:
+        // Iterator<Entry<Double, Integer>> askLevelsTaco = tacoMaster.getAskLevels().entrySet().iterator();
         Iterator askLevelsTaco = tacoMaster.getAskLevels().entrySet().iterator();
         Iterator bidLevelsBeef = beefMaster.getBidLevels().entrySet().iterator();
         Iterator bidLevelsTort = tortMaster.getBidLevels().entrySet().iterator();
 
         int levelCount = 0;
 
+        // msanders; levelCount should be a constant
         while (askLevelsTaco.hasNext() && bidLevelsBeef.hasNext() && bidLevelsTort.hasNext() && levelCount < 5) {
             Map.Entry<Double, Integer> tacoAsk = (Map.Entry<Double, Integer>) askLevelsTaco.next();
             Map.Entry<Double, Integer> beefBid = (Map.Entry<Double, Integer>) bidLevelsBeef.next();

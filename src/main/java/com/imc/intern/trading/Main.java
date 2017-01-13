@@ -22,7 +22,7 @@ public class Main
 
     public static void main(String[] args) throws Exception
     {
-        LOGGER.info("Let's make money.");
+        LOGGER.info("Let's make money."); // msanders: lol, nice.
         ExchangeClient client = ExchangeClient.create(EXCHANGE_URL, Account.of(USERNAME), PASSWORD);
         final RemoteExchangeView exchangeView = client.getExchangeView();
 
