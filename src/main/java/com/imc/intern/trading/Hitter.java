@@ -13,9 +13,6 @@ public class Hitter {
     private static final int maxTradeVolume = 20;
     private static final int maxLevelDepth = 2;
 
-    private static double lastArbitrageBuy = 0;
-    private static double lastArbitrageSell = 0;
-
     private BookMaster tacoMaster;
     private BookMaster beefMaster;
     private BookMaster tortMaster;
@@ -34,8 +31,6 @@ public class Hitter {
     }
 
     public void checkArbitrage(){
-        //LOGGER.info("Last arbitrage buy: " + lastArbitrageBuy);
-        //LOGGER.info("Last arbitrage sell: " + lastArbitrageSell);
         if(validPositions()){
             tacoBuyStrategy();
             tacoSellStrategy();
@@ -45,9 +40,6 @@ public class Hitter {
     public Boolean validPositions(){
         int beefPosition = tracker.getBeefPosition();
         int tortPosition = tracker.getTortPosition();
-
-        //LOGGER.info("BEEF POSITION IS " + beefPosition);
-        //LOGGER.info("TORT POSITION IS " + tortPosition);
 
         int maxLongPosition = tracker.getMaxLongPosition();
         int maxShortPosition = tracker.getMaxShortPosition();
@@ -60,18 +52,23 @@ public class Hitter {
 
     public Boolean checkLong(int position, int maxLongPosition, BookMaster master){
         if(position > maxLongPosition){
-            LOGGER.info(master.getSymbol() + " position " + position + " is beyond max long. Adjusting position.");
             flattenLong(position, master);
             return false;
+        }
+        else if(position > 0){
+            //Would be good time to quote sell for master.symbol()
+
         }
         return true;
     }
 
     public Boolean checkShort(int position, int maxShortPosition, BookMaster master){
         if(position < maxShortPosition){
-            LOGGER.info(master.getSymbol() + " position " + position + " is beyond max short. Adjusting position.");
             flattenShort(position, master);
             return false;
+        }
+        else if(position < 0){
+            //Would be good time to quote buy for master.symbol()
         }
         return true;
     }
@@ -82,7 +79,6 @@ public class Hitter {
             Map.Entry<Double, Integer> bid = (Map.Entry<Double, Integer>)bidLevels.next();
             int volume = Math.min(bid.getValue(), Math.abs(position)); //make sure not to over sell and end up short
             volume = Math.min(volume, maxTradeVolume);
-            LOGGER.info("In loop and volume=" + volume + " price=" + bid.getKey());
             executionService.executeFlatten(master.getSymbol(), bid.getKey(), volume, Side.SELL);
             position-=volume;
         }
@@ -94,7 +90,6 @@ public class Hitter {
             Map.Entry<Double, Integer> ask = (Map.Entry<Double, Integer>)askLevels.next();
             int volume = Math.min(ask.getValue(), Math.abs(position)); //make sure not to over sell and end up long
             volume = Math.min(volume, maxTradeVolume);
-            LOGGER.info("In loop and volume=" + volume + " price=" + ask.getKey());
             executionService.executeFlatten(master.getSymbol(), ask.getKey(), volume, Side.BUY);
             position+=volume;
         }
@@ -115,7 +110,6 @@ public class Hitter {
             volume = Math.min(volume, maxTradeVolume); //imposed volume limit
             if (tacoAsk.getKey() < (beefBid.getKey() + tortBid.getKey())) {
                 executionService.executeBuyTaco(tacoAsk.getKey(), beefBid.getKey(), tortBid.getKey(), volume);
-                lastArbitrageBuy = (beefBid.getKey() + tortBid.getKey()) - tacoAsk.getKey();
             } else {
                 break;
             }
@@ -138,7 +132,6 @@ public class Hitter {
             volume = Math.min(volume, maxTradeVolume);
             if(tacoBid.getKey() > (beefAsk.getKey() + tortAsk.getKey())){
                 executionService.executeSellTaco(tacoBid.getKey(), beefAsk.getKey(), tortAsk.getKey(), volume);
-                lastArbitrageSell = tacoBid.getKey() - (beefAsk.getKey() + tortAsk.getKey());
             }
             else{
                 break;
@@ -173,6 +166,19 @@ public class Hitter {
             tracker.updateTortPosition(trade.getVolume(), trade.getSide());
         }
     }
+
+    public void quoteTort(){
+        executionService.executeQuoteTort();
+    }
+
+    public void quoteBeef(){
+        executionService.executeQuoteBeef();
+    }
+
+    public void withdrawFromMarket(){
+        executionService.cancelOutstanding();
+    }
+
 
     public int minOfThree(int a, int b, int c){
         return Math.min(a,Math.min(b,c));

@@ -36,10 +36,9 @@ public class BookMaster {
 
     //Used to process level changes in book
     public void processLevels(List<RetailState.Level> bids, List<RetailState.Level> asks) {
-        LOGGER.info("Updating book for " + symbol);
         updateSide(bids, bidLevels);
         updateSide(asks, askLevels);
-        logBook();
+        //logBook();
     }
 
     //Used to update map for provided side (buy or ask)
@@ -47,7 +46,6 @@ public class BookMaster {
         for (RetailState.Level a : side) {
             double price = a.getPrice();
             int volume = a.getVolume();
-            LOGGER.info("Retail state update price=" + price + " volume="+volume);
             if (volume == 0) { //indicates a level was filled/removed
                 levels.remove(price);
             } else {

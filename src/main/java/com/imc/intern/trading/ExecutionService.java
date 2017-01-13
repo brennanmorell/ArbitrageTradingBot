@@ -51,12 +51,9 @@ public class ExecutionService {
     public void executeFlatten(Symbol symbol, Double beefBidPrice, int volume, Side side){
         long time = System.currentTimeMillis();
         if(validFlattenTime(time)) {
-            LOGGER.info("ATTEMPTING FLATTEN. " + side + " " + symbol + " " + volume + "@" + beefBidPrice);
+            LOGGER.info("ATTEMPTING FLATTEN. " + side.toString().toUpperCase() + " " + symbol + " " + volume + "@" + beefBidPrice);
             exchangeView.createOrder(symbol, beefBidPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, side);
             lastTradeTime = time;
-        }
-        else{
-            LOGGER.info("Invalid flatten time");
         }
     }
 
@@ -74,4 +71,22 @@ public class ExecutionService {
     public Boolean validFlattenTime(long time){
         return ((time - lastTradeTime) >= TimeUnit.SECONDS.toMillis(rateLimit/3));
     }
+
+    public void executeQuoteTort(){
+        LOGGER.info("Quoting Tort");
+        exchangeView.createOrder(Symbol.of(BOOK_TORT), 12d, 3, OrderType.GOOD_TIL_CANCEL, Side.BUY);
+        exchangeView.createOrder(Symbol.of(BOOK_TORT), 16d, 3, OrderType.GOOD_TIL_CANCEL, Side.SELL);
+    }
+
+    public void executeQuoteBeef(){
+        exchangeView.createOrder(Symbol.of(BOOK_TORT), 6d, 3, OrderType.GOOD_TIL_CANCEL, Side.BUY);
+        exchangeView.createOrder(Symbol.of(BOOK_TORT), 44d, 3, OrderType.GOOD_TIL_CANCEL, Side.SELL);
+    }
+
+    public void cancelOutstanding(){
+        exchangeView.massCancel(Symbol.of(BOOK_TACO));
+        exchangeView.massCancel(Symbol.of(BOOK_BEEF));
+        exchangeView.massCancel(Symbol.of(BOOK_TORT));
+    }
+
 }

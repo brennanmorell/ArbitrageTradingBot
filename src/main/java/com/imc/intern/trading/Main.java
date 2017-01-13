@@ -44,5 +44,14 @@ public class Main
         exchangeView.subscribe(Symbol.of(BOOK_TACO), tacoBookHandler);
         exchangeView.subscribe(Symbol.of(BOOK_BEEF), beefBookHandler);
         exchangeView.subscribe(Symbol.of(BOOK_TORT), tortBookHandler);
+
+        /*Quoting Strategy that requires manual intervention but makes bank when people rush to get flat. Also is low risk for exposure
+        because I quote low volume so won't end up too short or long if not all quotes are hit. Essentially, when everyone is rushing to
+        get flat, they don't check prices and just buy/sell blindly (I do the same). So I quote down the depth and just wait to be hit,
+        then cancel once i am hit.*/
+
+        //hitter.quoteTort();
+        //hitter.quoteBeef();
+       // hitter.withdrawFromMarket();
     }
 }

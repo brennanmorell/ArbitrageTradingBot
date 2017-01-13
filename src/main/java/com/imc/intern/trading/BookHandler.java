@@ -40,7 +40,6 @@ public class BookHandler implements OrderBookHandler {
     public void handleOwnTrade(OwnTrade trade) {
         LOGGER.info("Trade " + symbol + ": " + trade.toString());
         LOGGER.info(trade.toString());
-        LOGGER.info("TRADE OCCURRED " + trade.getSide() + " " + trade.getBook() + " " + trade.getVolume() + "@" + trade.getPrice());
         hitter.accountTrade(trade);
     }
 
