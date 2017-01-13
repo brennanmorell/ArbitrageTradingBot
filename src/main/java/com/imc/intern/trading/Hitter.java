@@ -33,25 +33,6 @@ public class Hitter {
         tracker = t;
     }
 
-    /*public void synchronizePositions(Map<Symbol, List<OwnTrade>> ownTrades){ //had null pointer. come back to later
-        LOGGER.info("Synchronizing positions...");
-        int count = 0; //for testing
-        if(ownTrades != null) {
-            for (Map.Entry<Symbol, List<OwnTrade>> entry : ownTrades.entrySet()) {
-                LOGGER.info("Got in here");
-                for (OwnTrade trade : entry.getValue()) {
-                    accountTrade(trade);
-                    count++;
-                }
-            }
-            LOGGER.info("Synchronized positions for " + count + " trades");
-        }
-        else{
-            LOGGER.info("Attempted to fetchTrades but received null");
-        }
-    }*/
-
-
     public void checkArbitrage(){
         //LOGGER.info("Last arbitrage buy: " + lastArbitrageBuy);
         //LOGGER.info("Last arbitrage sell: " + lastArbitrageSell);

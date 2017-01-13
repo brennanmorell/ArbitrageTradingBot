@@ -19,7 +19,7 @@ public class ExecutionService {
 
     private static ExchangeView exchangeView;
 
-    private static final long rateLimit = 30;
+    private static final long rateLimit = 10;
     private static long lastTradeTime = 0;
 
     public ExecutionService(ExchangeView e){

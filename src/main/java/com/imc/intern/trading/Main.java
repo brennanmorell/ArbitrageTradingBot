@@ -44,7 +44,5 @@ public class Main
         exchangeView.subscribe(Symbol.of(BOOK_TACO), tacoBookHandler);
         exchangeView.subscribe(Symbol.of(BOOK_BEEF), beefBookHandler);
         exchangeView.subscribe(Symbol.of(BOOK_TORT), tortBookHandler);
-
-        //hitter.synchronizePositions(exchangeView.getTrades());
     }
 }
