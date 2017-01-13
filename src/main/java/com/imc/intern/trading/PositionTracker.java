@@ -11,7 +11,7 @@ public class PositionTracker {
     private static final int maxLongPosition  = 10;
     private static final int maxShortPosition = -10;
 
-    private int beefPosition = 0;
+    private int beefPosition = 20;
     private int tortPosition = 0;
 
     public int getMaxLongPosition(){

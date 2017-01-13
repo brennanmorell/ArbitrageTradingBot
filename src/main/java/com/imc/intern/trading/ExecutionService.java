@@ -3,13 +3,10 @@ package com.imc.intern.trading;
 import com.imc.intern.exchange.datamodel.Side;
 import com.imc.intern.exchange.datamodel.api.OrderBookHandler;
 import com.imc.intern.exchange.datamodel.api.OrderType;
-import com.imc.intern.exchange.datamodel.api.OwnTrade;
 import com.imc.intern.exchange.datamodel.api.Symbol;
 import com.imc.intern.exchange.views.ExchangeView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class ExecutionService {
@@ -28,10 +25,6 @@ public class ExecutionService {
     public ExecutionService(ExchangeView e){
         exchangeView = e;
     }
-
-    /*public Map<Symbol, List<OwnTrade>> fetchTrades(){
-       return exchangeView.getTrades();
-    }*/
 
     /*Execution used for core arbitrage strategy*/
     public void executeBuyTaco(Double tacoAskPrice, Double beefBidPrice, Double tortBidPrice, int volume){
@@ -74,11 +67,11 @@ public class ExecutionService {
         exchangeView.createOrder(Symbol.of(BOOK_TORT), tortPrice, volume, OrderType.IMMEDIATE_OR_CANCEL, side);
     }
 
-    public Boolean validArbitrageTime(long buyTime){
-        return buyTime - lastTradeTime >= TimeUnit.SECONDS.toMillis(rateLimit);
+    public Boolean validArbitrageTime(long time){
+        return ((time - lastTradeTime) >= TimeUnit.SECONDS.toMillis(rateLimit));
     }
 
-    public Boolean validFlattenTime(long buyTime){
-        return buyTime - lastTradeTime >= TimeUnit.SECONDS.toMillis(rateLimit/3);
+    public Boolean validFlattenTime(long time){
+        return ((time - lastTradeTime) >= TimeUnit.SECONDS.toMillis(rateLimit/3));
     }
 }

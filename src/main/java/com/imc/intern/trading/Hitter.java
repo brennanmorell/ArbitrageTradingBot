@@ -2,7 +2,6 @@ package com.imc.intern.trading;
 
 import com.imc.intern.exchange.datamodel.Side;
 import com.imc.intern.exchange.datamodel.api.OwnTrade;
-import com.imc.intern.exchange.datamodel.api.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
@@ -11,8 +10,8 @@ import java.util.*;
 public class Hitter {
     private static final Logger LOGGER = LoggerFactory.getLogger(Hitter.class);
 
-    private static final int maxTradeVolume = 10;
-    private static final int maxLevelDepth = 5;
+    private static final int maxTradeVolume = 20;
+    private static final int maxLevelDepth = 2;
 
     private static double lastArbitrageBuy = 0;
     private static double lastArbitrageSell = 0;
@@ -34,7 +33,7 @@ public class Hitter {
         tracker = t;
     }
 
-    /*public void synchronizePositions(Map<Symbol, List<OwnTrade>> ownTrades){
+    /*public void synchronizePositions(Map<Symbol, List<OwnTrade>> ownTrades){ //had null pointer. come back to later
         LOGGER.info("Synchronizing positions...");
         int count = 0; //for testing
         if(ownTrades != null) {
@@ -52,9 +51,10 @@ public class Hitter {
         }
     }*/
 
+
     public void checkArbitrage(){
-        LOGGER.info("Last arbitrage buy: " + lastArbitrageBuy);
-        LOGGER.info("Last arbitrage sell: " + lastArbitrageSell);
+        //LOGGER.info("Last arbitrage buy: " + lastArbitrageBuy);
+        //LOGGER.info("Last arbitrage sell: " + lastArbitrageSell);
         if(validPositions()){
             tacoBuyStrategy();
             tacoSellStrategy();
@@ -101,6 +101,7 @@ public class Hitter {
             Map.Entry<Double, Integer> bid = (Map.Entry<Double, Integer>)bidLevels.next();
             int volume = Math.min(bid.getValue(), Math.abs(position)); //make sure not to over sell and end up short
             volume = Math.min(volume, maxTradeVolume);
+            LOGGER.info("In loop and volume=" + volume + " price=" + bid.getKey());
             executionService.executeFlatten(master.getSymbol(), bid.getKey(), volume, Side.SELL);
             position-=volume;
         }
@@ -112,6 +113,7 @@ public class Hitter {
             Map.Entry<Double, Integer> ask = (Map.Entry<Double, Integer>)askLevels.next();
             int volume = Math.min(ask.getValue(), Math.abs(position)); //make sure not to over sell and end up long
             volume = Math.min(volume, maxTradeVolume);
+            LOGGER.info("In loop and volume=" + volume + " price=" + ask.getKey());
             executionService.executeFlatten(master.getSymbol(), ask.getKey(), volume, Side.BUY);
             position+=volume;
         }

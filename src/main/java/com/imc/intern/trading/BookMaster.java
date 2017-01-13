@@ -38,6 +38,7 @@ public class BookMaster {
     public void processLevels(List<RetailState.Level> bids, List<RetailState.Level> asks) {
         updateSide(bids, bidLevels);
         updateSide(asks, askLevels);
+
         //logBook();
     }
 
