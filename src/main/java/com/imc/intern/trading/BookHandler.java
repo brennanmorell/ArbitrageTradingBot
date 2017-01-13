@@ -32,7 +32,7 @@ public class BookHandler implements OrderBookHandler {
     //Called every time you make an order, update an order, cancel an order, or your order gets traded
     @Override
     public void handleExposures(ExposureUpdate exposures) {
-        LOGGER.info("Exposures " + symbol + ": " + exposures.toString());
+        //LOGGER.info("Exposures " + symbol + ": " + exposures.toString());
     }
 
     //Called every time you complete a trade
@@ -40,6 +40,7 @@ public class BookHandler implements OrderBookHandler {
     public void handleOwnTrade(OwnTrade trade) {
         LOGGER.info("Trade " + symbol + ": " + trade.toString());
         LOGGER.info(trade.toString());
+        LOGGER.info("TRADE OCCURRED " + trade.getSide() + " " + trade.getBook() + " " + trade.getVolume() + "@" + trade.getPrice());
         hitter.accountTrade(trade);
     }
 

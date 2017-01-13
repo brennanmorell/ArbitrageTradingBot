@@ -1,131 +1,25 @@
 package com.imc.intern.trading;
 
 import com.imc.intern.exchange.datamodel.Side;
-import com.imc.intern.exchange.datamodel.api.OrderType;
-import com.imc.intern.exchange.datamodel.api.Symbol;
-import com.imc.intern.exchange.views.ExchangeView;
 import org.junit.Test;
+import org.mockito.InOrder;
 import org.mockito.Mockito;
 
+import java.util.Collections;
 import java.util.TreeMap;
 import java.util.Map;
 
 public class HitterTest {
-    // NAJ: I would use an @Before method to define the symbol, hitter, levels as fields:
-//    private final static Symbol SYMBOL = Symbol.of("test");
-//    private ExchangeView exchangeView;
-//    private Map<Double, Integer> levels;
-//    private Hitter hitter;
-//
-//    @Before
-//    public void before()
-//    {
-//        exchangeView = Mockito.mock(ExchangeView.class);
-//        hitter = new Hitter(exchangeView);
-//        levels = new TreeMap<>();
-//    }
-//
-//    @After
-//    public void after()
-//    {
-//        Mockito.verifyNoMoreInteractions(exchangeView);
-//    }
-//
-//    @Test
-//    public void buyStrategySendsOrders()
-//    {
-//        double price = 18.0;
-//        int volume = 100;
-//        levels.put(price, volume);
-//        hitter.buyStrategy(levels, symbol);
-//
-//        Mockito.verify(exchangeView).createOrder(SYMBOL, price, volume, OrderType.IMMEDIATE_OR_CANCEL, Side.BUY);
-//    }
-
-
-
-   /* @Test
-    public void buyStrategySendsOrders()
-    {
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-        Symbol symbol = Symbol.of("buyOrdersTest");
-        double price = 18.0;
-        int volume = 100;
-        Hitter hitter = new Hitter(exchangeView);
-        Map<Double, Integer> levels = new TreeMap<>();
-        levels.put(price, volume);
-
-        hitter.buyStrategy(levels, symbol);
-
-        Mockito.verify(exchangeView).createOrder(symbol, price, volume, OrderType.IMMEDIATE_OR_CANCEL, Side.BUY);
-    }
 
     @Test
-    public void buyStrategyNoOrders() {
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-        Symbol symbol = Symbol.of("buyNoOrdersTest");
-        double price = 22.0;
-        int volume = 100;
-        Hitter hitter = new Hitter(exchangeView);
-        Map<Double, Integer> levels = new TreeMap<>();
-        levels.put(price, volume);
-
-        hitter.buyStrategy(levels, symbol);
-
-        Mockito.verifyZeroInteractions(exchangeView);
-    }
-
-
-    @Test
-    public void sellStrategySendsOrders(){
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-        Symbol symbol = Symbol.of("sellOrdersTest");
-        double price = 22.0;
-        int volume = 100;
-        Hitter hitter = new Hitter(exchangeView);
-        Map<Double, Integer> levels = new TreeMap<>();
-        levels.put(price, volume);
-
-        hitter.sellStrategy(levels, symbol);
-
-        Mockito.verify(exchangeView).createOrder(symbol, price, volume, OrderType.IMMEDIATE_OR_CANCEL, Side.SELL);
-    }
-
-    @Test
-    public void sellStrategyNoOrders(){
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-        Symbol symbol = Symbol.of("sellNoOrdersTest");
-        double price = 18.0;
-        int volume = 100;
-        Hitter hitter = new Hitter(exchangeView);
-        Map<Double, Integer> levels = new TreeMap<>();
-        levels.put(price, volume);
-
-        hitter.sellStrategy(levels, symbol);
-
-        Mockito.verifyZeroInteractions(exchangeView);
-    }
-    */
-
-    /*@Test
-    public void testTacoBuyStrategy(){
-        ExchangeView exchangeView = Mockito.mock(ExchangeView.class);
-        BookMaster tacoMaster = Mockito.mock(BookMaster.class);
-
-        Mockito.when(tacoMaster.getBidLevels()).thenReturn(
-        )
-        BookMaster beefMaster = Mockito.mock(BookMaster.class);
-        BookMaster tortMaster = Mockito.mock(BookMaster.class);
-        tacoMaster
-    }*/
-
-   /* @Test
     public void testTacoBuy(){
         BookMaster tacoMaster = Mockito.mock(BookMaster.class);
         BookMaster beefMaster = Mockito.mock(BookMaster.class);
         BookMaster tortMaster = Mockito.mock(BookMaster.class);
 
         ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
+        PositionTracker tracker = Mockito.mock(PositionTracker.class);
 
         //Set up tacoMaster map
         Map<Double, Integer> tacoAskLevels = new TreeMap<>();
@@ -142,12 +36,61 @@ public class HitterTest {
         tortBidLevels.put(5d, 10);
         Mockito.when(tortMaster.getBidLevels()).thenReturn(tortBidLevels);
 
-        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService);
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService, tracker);
         hitter.tacoBuyStrategy();
 
         //Verify create and account taco order
         Mockito.verify(executionService).executeBuyTaco(10d, 6d, 5d, 7);
     }
+
+    @Test
+    public void testFlattenLong(){
+        BookMaster tacoMaster = Mockito.mock(BookMaster.class);
+        BookMaster beefMaster = Mockito.mock(BookMaster.class);
+        BookMaster tortMaster = Mockito.mock(BookMaster.class);
+
+        ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
+        PositionTracker tracker = Mockito.mock(PositionTracker.class);
+
+        Map<Double, Integer> beefBidLevels = new TreeMap<>(Collections.reverseOrder());
+        beefBidLevels.put(10d, 30);
+        beefBidLevels.put(9d, 40);
+        Mockito.when(beefMaster.getBidLevels()).thenReturn(beefBidLevels);
+
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService, tracker);
+        hitter.flattenLong(60, beefMaster);
+
+        //should sell 30@10d and then 30@9d
+        InOrder inOrder = Mockito.inOrder(executionService);
+        inOrder.verify(executionService).executeFlatten(beefMaster.getSymbol(), 10d, 30, Side.SELL);
+        inOrder.verify(executionService).executeFlatten(beefMaster.getSymbol(), 9d, 30, Side.SELL);
+    }
+
+    @Test
+    public void testFlattenShort(){
+        BookMaster tacoMaster = Mockito.mock(BookMaster.class);
+        BookMaster beefMaster = Mockito.mock(BookMaster.class);
+        BookMaster tortMaster = Mockito.mock(BookMaster.class);
+
+        ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
+        PositionTracker tracker = Mockito.mock(PositionTracker.class);
+
+        Map<Double, Integer> beefAskLevels = new TreeMap<>();
+        beefAskLevels.put(9d, 30);
+        beefAskLevels.put(10d, 40);
+        Mockito.when(beefMaster.getAskLevels()).thenReturn(beefAskLevels);
+
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService, tracker);
+        hitter.flattenShort(-60, beefMaster);
+
+        //should buy 30@9d and then 30@10d
+        InOrder inOrder = Mockito.inOrder(executionService);
+        inOrder.verify(executionService).executeFlatten(beefMaster.getSymbol(), 9d, 30, Side.BUY);
+        inOrder.verify(executionService).executeFlatten(beefMaster.getSymbol(), 10d, 30, Side.BUY);
+    }
+
 
     @Test
     public void testNoTacoBuy(){
@@ -156,6 +99,8 @@ public class HitterTest {
         BookMaster tortMaster = Mockito.mock(BookMaster.class);
 
         ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
+        PositionTracker tracker = Mockito.mock(PositionTracker.class);
 
         //Set up tacoMaster map
         Map<Double, Integer> tacoAskLevels = new TreeMap<>();
@@ -172,7 +117,7 @@ public class HitterTest {
         tortBidLevels.put(5d, 10);
         Mockito.when(tortMaster.getAskLevels()).thenReturn(tortBidLevels);
 
-        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService);
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService, tracker);
         hitter.tacoBuyStrategy();
 
         //Verify create and account taco order
@@ -186,6 +131,8 @@ public class HitterTest {
         BookMaster tortMaster = Mockito.mock(BookMaster.class);
 
         ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
+        PositionTracker tracker = Mockito.mock(PositionTracker.class);
 
         //Set up tacoMaster map
         Map<Double, Integer> tacoBidLevels = new TreeMap<>();
@@ -202,7 +149,7 @@ public class HitterTest {
         tortAskLevels.put(5d, 11);
         Mockito.when(tortMaster.getAskLevels()).thenReturn(tortAskLevels);
 
-        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService);
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService, tracker);
         hitter.tacoSellStrategy();
 
         //Verify create and account taco order
@@ -216,6 +163,8 @@ public class HitterTest {
         BookMaster tortMaster = Mockito.mock(BookMaster.class);
 
         ExecutionService executionService = Mockito.mock(ExecutionService.class);
+
+        PositionTracker tracker = Mockito.mock(PositionTracker.class);
 
         //Set up tacoMaster map
         Map<Double, Integer> tacoBidLevels = new TreeMap<>();
@@ -232,11 +181,10 @@ public class HitterTest {
         tortAskLevels.put(5d, 12);
         Mockito.when(tortMaster.getAskLevels()).thenReturn(tortAskLevels);
 
-        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService);
+        Hitter hitter = new Hitter(tacoMaster, beefMaster, tortMaster, executionService, tracker);
         hitter.tacoSellStrategy();
 
         //Verify no order
         Mockito.verifyZeroInteractions(executionService);
     }
-*/
 }

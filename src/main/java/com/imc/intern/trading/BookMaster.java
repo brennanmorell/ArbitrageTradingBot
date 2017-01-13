@@ -1,12 +1,12 @@
 package com.imc.intern.trading;
 
-
 import com.imc.intern.exchange.datamodel.Side;
 import com.imc.intern.exchange.datamodel.api.RetailState;
 import com.imc.intern.exchange.datamodel.api.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
+
 
 public class BookMaster {
 
@@ -16,10 +16,11 @@ public class BookMaster {
     private Map<Double, Integer> askLevels = new TreeMap<>();
     private Map<Double, Integer> bidLevels = new TreeMap<>(Collections.reverseOrder());
 
+    private Map<Side, List<Long>> outstandingOrders = new HashMap<>();
+
     public BookMaster(Symbol s){
         symbol = s;
     }
-
 
     public Symbol getSymbol(){
         return symbol;
@@ -32,7 +33,6 @@ public class BookMaster {
     public Map<Double, Integer> getAskLevels(){
         return askLevels;
     }
-
 
     //Used to process level changes in book
     public void processLevels(List<RetailState.Level> bids, List<RetailState.Level> asks) {
@@ -60,7 +60,7 @@ public class BookMaster {
         }
     }
 
-    public void accountOrder(Double price, int tradeVolume, Side side) {
+    public void updateBooks(Double price, int tradeVolume, Side side) {
         if (side == Side.BUY) {
             int currentVolume = askLevels.get(price);
             if (currentVolume - tradeVolume == 0) {
@@ -91,6 +91,4 @@ public class BookMaster {
             LOGGER.info(entry.getValue() + "@" + entry.getKey());
         }
     }
-
-
 }

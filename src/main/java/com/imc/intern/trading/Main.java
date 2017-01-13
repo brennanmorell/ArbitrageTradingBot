@@ -3,7 +3,6 @@ package com.imc.intern.trading;
 import com.imc.intern.exchange.client.ExchangeClient;
 import com.imc.intern.exchange.client.RemoteExchangeView;
 import com.imc.intern.exchange.datamodel.api.*;
-import javafx.geometry.Pos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +31,7 @@ public class Main
         BookMaster beefBookMaster = new BookMaster(Symbol.of(BOOK_BEEF));
         BookMaster tortBookMaster = new BookMaster(Symbol.of(BOOK_TORT));
 
-
         ExecutionService executionService = new ExecutionService(exchangeView);
-
 
         Hitter hitter = new Hitter(tacoBookMaster, beefBookMaster, tortBookMaster, executionService, tracker);
 
@@ -47,5 +44,7 @@ public class Main
         exchangeView.subscribe(Symbol.of(BOOK_TACO), tacoBookHandler);
         exchangeView.subscribe(Symbol.of(BOOK_BEEF), beefBookHandler);
         exchangeView.subscribe(Symbol.of(BOOK_TORT), tortBookHandler);
+
+        //hitter.synchronizePositions(exchangeView.getTrades());
     }
 }
